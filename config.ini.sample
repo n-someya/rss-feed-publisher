@@ -1,6 +1,6 @@
 [mattermost]
 # Mattermost incomming webhook url
-url = http://10.125.75.11:8065/hooks/qs4uzy4b1py98qjpiut93sewzw
+url = http://xxx.xxx.xxx/hooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # Override mattermost username 
 username = はてブTECHフィード
 # Interval time, when send multiple feed.
@@ -13,4 +13,4 @@ url = http://b.hatena.ne.jp/hotentry/it.rss
 interval = 600
 
 [database]
-conn = postgresql://testuser:password@10.125.75.11:5432/feedget
+conn = postgresql://user:pass@xxx.xxx.xxx.xxx:xxxx/yyyy

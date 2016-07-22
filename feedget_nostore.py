@@ -10,7 +10,6 @@ import logging
 import re
 from ConfigParser import SafeConfigParser
 import sys
-from sqlalchemy import create_engine
 
 DEFAULT_COFIG_PATH = "./config.ini"
 
@@ -37,18 +36,13 @@ def main():
     MATTERMOST_USER = config.get('mattermost', 'username')
     GETFEED_INTERVAL = float(config.get('rss', 'interval'))
     SENDMESSAGE_INTERVAL = float(config.get('mattermost', 'interval'))
-    DATABASE_CONN = config.get('database', 'conn')
-    DATABASE_TABLE = "feed"
 
     mmc = mattermost_cl.MatterMostClient(MATTERMOSTURL)
 
-    # Get First RSS feed. TODO: Get id from database
     print("Start get feed from %s" % (RSS_URL))
     feed = feedparser.parse(RSS_URL)
     initial_entries = pd.DataFrame(feed.entries)
     already_print_feeds = pd.Series(initial_entries['id'])
-    # connect database
-    engine = create_engine(DATABASE_CONN)
 
     while True:
         time.sleep(GETFEED_INTERVAL)
@@ -60,10 +54,6 @@ def main():
                 feedinfo = "[**%s**](%s)\n\n>%s" % (row['title'],  row['link'], tag_re.sub('', row['summary']))
                 mmc.send_message(feedinfo, username=MATTERMOST_USER)
                 time.sleep(SENDMESSAGE_INTERVAL)
-            # Store database
-            stored_entries = new_entries.ix[:, [
-                "id", "link", "title", "summary", "updated"]]
-            stored_entries.to_sql(DATABASE_TABLE, engine, index=False, if_exists='append')
         # TODO: get already_print_feeds from database
         already_print_feeds = already_print_feeds.append(new_entries['id'])
 
