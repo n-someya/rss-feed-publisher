@@ -8,7 +8,10 @@ import pandas as pd
 from mattermost_client import mattermost_cl
 import logging
 import re
-from ConfigParser import SafeConfigParser
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError:
+    from configparser import SafeConfigParser
 import sys
 from sqlalchemy import create_engine
 
@@ -55,7 +58,6 @@ def main():
         feed = feedparser.parse(RSS_URL)
         entries = pd.DataFrame(feed.entries)
         new_entries = entries[~entries['id'].isin(already_print_feeds['id'])]
-        exit(0)
         if not new_entries.empty:
             for key, row in new_entries.iterrows():
                 feedinfo = "[**%s**](%s)\n\n>%s" % (row['title'],  row['link'], tag_re.sub('', row['summary']))
