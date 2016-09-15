@@ -19,6 +19,8 @@ from sqlalchemy import create_engine
 DEFAULT_COFIG_PATH = "./config.ini"
 DATABASE_TABLE = "feedredirector_article"
 FEED_TABLE = "feedredirector_feed"
+USER_ID=1
+SERVER_URL="http://10.125.75.43:8000/smartfeed/feed/{0}/{1}"
 
 tag_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
 logger = logging.getLogger(__name__)
@@ -56,29 +58,27 @@ def main():
 
     print("Start get feed from %s" % (RSS_URL))
     already_print_feeds = pd.read_sql_query("select * from {0} where feed_id == {1}".format(DATABASE_TABLE, feed_id), engine)
-    print(already_print_feeds)
 
     while True:
-        time.sleep(3)
+        time.sleep(GETFEED_INTERVAL)
         feed = feedparser.parse(RSS_URL)
         entries = pd.DataFrame(feed.entries)
-        new_entries = entries[~entries['id'].isin(already_print_feeds['id'])]
+        new_entries = entries[~entries['link'].isin(already_print_feeds['link'])]
         if not new_entries.empty:
-            for key, row in new_entries.iterrows():
-                feedinfo = "[**%s**](%s)\n\n>%s" % (row['title'],  row['link'], tag_re.sub('', row['summary']))
-                print(feedinfo)
-                time.sleep(1)
             # Store database
             stored_entries = new_entries.ix[:, [
                 "link", "title", "summary", "updated"]]
             stored_entries['feed_id'] = feed_id
-            print(stored_entries)
             stored_entries.to_sql(DATABASE_TABLE, engine, index=False, if_exists='append')
+            for key, row in new_entries.iterrows():
+                article = pd.read_sql_query("select * from {0} where feed_id == {1} and link == '{2}'".format(DATABASE_TABLE, feed_id, row['link']), engine)
+                feedinfo = "[**{0}**]({1})\n\n>{2}".format(row['title'], SERVER_URL.format(article['id'][0], USER_ID), tag_re.sub('', row['summary']))
+                print(feedinfo)
+                # mmc.send_message(feedinfo, username=MATTERMOST_USER)
+                time.sleep(SENDMESSAGE_INTERVAL)
 
         # get already_print_feeds from database
-        already_print_feeds = pd.read_sql_query("select * from %s" % DATABASE_TABLE, engine)
-        print(already_print_feeds)
-        exit(0)
+        already_print_feeds = pd.read_sql_query("select * from {0} where feed_id == {1}".format(DATABASE_TABLE, feed_id), engine)
 
 
 if __name__ == "__main__":
