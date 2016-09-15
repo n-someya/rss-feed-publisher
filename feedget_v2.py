@@ -73,8 +73,7 @@ def main():
             for key, row in new_entries.iterrows():
                 article = pd.read_sql_query("select * from {0} where feed_id == {1} and link == '{2}'".format(DATABASE_TABLE, feed_id, row['link']), engine)
                 feedinfo = "[**{0}**]({1})\n\n>{2}".format(row['title'], SERVER_URL.format(article['id'][0], USER_ID), tag_re.sub('', row['summary']))
-                print(feedinfo)
-                # mmc.send_message(feedinfo, username=MATTERMOST_USER)
+                mmc.send_message(feedinfo, username=MATTERMOST_USER)
                 time.sleep(SENDMESSAGE_INTERVAL)
 
         # get already_print_feeds from database
