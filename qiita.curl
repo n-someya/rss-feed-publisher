@@ -1,0 +1,2 @@
+curl https://qiita.com/api/v2/items | jq "."
+curl https://qiita.com/api/v2/users | jq ".[] | .id" 
